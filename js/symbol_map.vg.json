@@ -1,0 +1,143 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {"url": "./data/nobel_final.csv"},
+  "transform": [
+        
+  ],
+  "vconcat": [
+    {
+      "width": 800,
+      "height": 350,
+      "layer": [
+        {
+          "title": "Nobel Prize Winner in World",
+          "data": {
+            "url": "./js/ne_110m_admin_0_countries.topojson",
+            "format": {
+              "type": "topojson",
+              "feature": "ne_110m_admin_0_countries"
+            }
+          },
+          "projection": {"type": "equalEarth"},
+          "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "white"}
+        },
+        {
+          "mark": {"type": "circle","color":"steelblue"},
+          "params": [
+            {
+              "name":"click",
+              "select": {"type": "point","on":"mouseover","nearest": true}
+            }
+          ],
+          "transform": [
+            {
+
+              "aggregate": [
+                {
+                  "op": "count",
+                  "field": "country",
+                  "as": "totalwinnerByCountry"
+                }
+              ],
+              "groupby": ["country"]
+            },
+         
+            {
+      "lookup": "country",
+      "from": {
+        "data": {"url": "./data/countries.csv"},
+        "key": "Short",
+        "fields": ["Central_lat", "Central_lng", "Country"]
+      }},
+      {"filter": {"param": "select"}}
+          ],
+          "encoding": {
+            "latitude": {"field": "Central_lat", "type": "quantitative"},
+            "longitude": {"field": "Central_lng", "type": "quantitative"},
+            "tooltip": [
+              {"field": "Country", "type": "nominal"},
+              {"field": "totalwinnerByCountry", "type": "quantitative"}
+            ],
+           
+            "fillOpacity": {
+              "condition": {"param": "click", "value": 1},
+              "value": 0.3
+            },
+            "size": {
+              "condition": {
+                "test": {"or": [
+                  {"param": "select", "empty": false},
+                  {"param": "click", "empty": false}
+                ]},
+                "value": 400
+              },
+            
+            
+              "field": "totalwinnerByCountry",
+              "type": "quantitative",
+              "scale": {"domain": [0,150]}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "width": 800,
+      "height": 100,
+      "mark": {"type": "bar"},
+      "params": [
+        {
+          "name":"select",
+          "select": {"type": "interval","encodings": ["x"]}
+        }
+      ],
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "count",
+              "field": "country",
+              "as": "totalwinnerByCategory"
+            }
+          ],
+          "groupby": ["country","category"]
+        },
+        {
+      "lookup": "country",
+      "from": {
+        "data": {"url": "./data/countries.csv"},
+        "key": "Short",
+        "fields": ["Country"]
+      }}
+      
+      
+      ],
+      "encoding": {
+        "x": {"field": "Country",
+               "type": "nominal" 
+               
+              },
+        "y": {
+          "aggregate": "count",
+          "stack": "zero"
+        },
+        "color": {"field": "category", "type": "nominal"},
+        "fillOpacity": {
+          "condition": {"param": "select", "value": 1},
+          "value": 0.1
+        },
+    
+
+        "tooltip": [
+          {"field": "Country", "type": "nominal"},
+          {"field": "category", "type": "nominal"},
+          {
+            "field": "totalwinnerByCategory",
+            "type": "quantitative",
+            "title": "winner number "
+          }
+        ]
+      }
+    }
+  ]
+}
